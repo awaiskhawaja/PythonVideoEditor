@@ -1,0 +1,4 @@
+numpy==1.26.4
+opencv_python==4.9.0.80
+opencv_python_headless==4.8.0.74
+pygame_ce==2.3.2
