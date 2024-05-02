@@ -1,10 +1,9 @@
-import utilities
+import utilities, gui
 import pygame
 from pygame.locals import *
-import cv2
 import numpy
+import PIL
 import typing
-
 # ----- Pygame Setup -----
 
 clock = pygame.time.Clock()
@@ -22,6 +21,7 @@ mp = False # If LMB down
 mp2 = False # If RMB down
 m_down = False # Set to true on the single frame LMB pressed, false otherwise
 keys = [] # Keys currently being pressed
+m_use = False # Set to true when an object is interacted with, stops any other object interacting with the mouse at the same time
 
 pygame.display.set_caption("Video Editor")
 
@@ -75,6 +75,7 @@ while running:
     fps = int(clock.get_fps())
 
     m_down = False # Reset value
+    m_use = True
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
