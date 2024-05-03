@@ -8,7 +8,7 @@ Each theme has a list of colours associated with it, that are used by the differ
 
 buttons: text, normal, hover, clicked
 """
-allThemes: dict[str, list] = {
+allThemes = {
     "basic": [(0, 0, 0), (255, 255, 255), (200, 200, 200), (100, 100, 100)],
     "dark": [(200, 200, 200), (50, 50, 50), (75, 75, 75), (100, 100, 100)]
 }

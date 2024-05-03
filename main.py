@@ -59,6 +59,7 @@ def mtouch(tx: int, ty: int, tw: int, th: int) -> bool:
 
 # ----- Setup -----
 b = gui.button("Test", "dark", (10, 10), style={"border":True, "border-width": 1}) # Example button
+b2 = gui.button("Test Button Longer Text", "basic", (10, 200), style={"border": True, "border-width": 10, "padding-width": 200, "padding-height": 200})
 
 # ----- Main loop -----
 
@@ -96,6 +97,7 @@ while running:
 
     gui.updateLocals(mx, my, mp, m_down) # Pass mouse data to gui library
     b.update(screen) # Draw and update button
+    b2.update(screen)
 
     pygame.display.flip()
 
