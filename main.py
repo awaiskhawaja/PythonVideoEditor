@@ -4,6 +4,7 @@ from pygame.locals import *
 import numpy
 import PIL
 import typing
+
 # ----- Pygame Setup -----
 
 clock = pygame.time.Clock()
@@ -11,17 +12,16 @@ pygame.init()
 
 displayInfo = pygame.display.Info()
 screen = pygame.display.set_mode((displayInfo.current_w - 50, displayInfo.current_h - 100), RESIZABLE)
-screenSize = screen.get_size()
+screenSize: typing.Tuple[int, int] = screen.get_size()
 
-backcolour = (100, 100, 100)
+backcolour: typing.Tuple[int, int, int]  = (100, 100, 100)
 
-mx = 0 # Current mouse x-position
-my = 0 # Current mouse y-position
-mp = False # If LMB down
-mp2 = False # If RMB down
-m_down = False # Set to true on the single frame LMB pressed, false otherwise
+mx: int = 0 # Current mouse x-position
+my: int = 0 # Current mouse y-position
+mp: bool = False # If LMB down
+mp2: bool = False # If RMB down
+m_down: bool = False # Set to true on the single frame LMB pressed, false otherwise
 keys = [] # Keys currently being pressed
-m_use = False # Set to true when an object is interacted with, stops any other object interacting with the mouse at the same time
 
 pygame.display.set_caption("Video Editor")
 
@@ -36,9 +36,9 @@ def txt(size: int, text: str, color: typing.Tuple[int, int, int], tx: int, ty: i
     :param ty: y-position to render
     """
 
-    font = pygame.font.SysFont('arial', size)
-    label = font.render(text, 1, color)
-    screen.blit(label, (tx, ty))
+    font = pygame.font.SysFont('arial', size) # Get system font
+    label = font.render(text, 1, color) # Render text
+    screen.blit(label, (tx, ty)) # Draw on main surface
 
 def mtouch(tx: int, ty: int, tw: int, th: int) -> bool:
 
@@ -57,6 +57,9 @@ def mtouch(tx: int, ty: int, tw: int, th: int) -> bool:
             t = True
     return t
 
+# ----- Setup -----
+b = gui.button("Test", "dark", (10, 10), style={"border":True, "border-width": 1}) # Example button
+
 # ----- Main loop -----
 
 running = True
@@ -74,11 +77,12 @@ while running:
     clock.tick(60)
     fps = int(clock.get_fps())
 
+    pygame.display.set_caption(f"Video Editor | FPS: {fps}")
+
     m_down = False # Reset value
-    m_use = True
     for event in pygame.event.get():
 
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT: # Cross button clicked
             running = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -87,6 +91,11 @@ while running:
 
         elif event.type == pygame.VIDEORESIZE: # User resized the window
             screenSize = screen.get_size() # Update with the new size
+
+    # ----------
+
+    gui.updateLocals(mx, my, mp, m_down) # Pass mouse data to gui library
+    b.update(screen) # Draw and update button
 
     pygame.display.flip()
 
