@@ -13,6 +13,20 @@ allThemes = {
     "dark": [(200, 200, 200), (50, 50, 50), (75, 75, 75), (100, 100, 100)]
 }
 
+# Default style parameters for button class
+buttonDefaults: dict = {
+    "font": "agency fb",
+    "size": 20,
+    "border": False,
+    "border-width": 2,
+    "padding-width": 50,
+    "padding-height": 20
+}
+
+buttonListDefaults: dict = {
+    "spacing": 0
+}
+
 # Local version of mouse data that all GUI objects can use
 local_mx: int = 0
 local_my: int = 0
@@ -67,6 +81,7 @@ class button:
         :param theme: Colour theme to use, key from allThemes dictionary.
         :param pos: Coordinate of top-left corner of button.
         :param function: Function to call when button clicked.
+        :param style: A dictionary with customisable style parameters.
         """
 
         global allThemes
@@ -95,6 +110,20 @@ class button:
 
         self.render() # Generate surfaces
 
+    def setPos(self, x: int = None, y: int = None) -> None:
+
+        """
+        Change the button position
+        :param x: New x-position, unchanged if not specified
+        :param y: New y-position, unchanged if not specified
+        """
+
+        if not (x is None):
+            self.pos = (x, self.pos[1])
+
+        if not (y is None):
+            self.pos = (self.pos[0], y)
+
     def getStyle(self, name: str) -> typing.Any:
 
         """
@@ -104,19 +133,12 @@ class button:
         :return: Style used, if supplied, otherwise the default value
         """
 
-        defaults: dict = {
-            "font": "agency fb",
-            "size": 20,
-            "border": False,
-            "border-width": 2,
-            "padding-width": 50,
-            "padding-height": 20
-        }
+        global buttonDefaults
 
         if name in self.style: # If user specified the style parameter
             return self.style[name]
 
-        return defaults[name]
+        return buttonDefaults[name] # If not specified, return the default from the above definition
 
     def render(self) -> None:
 
@@ -153,12 +175,20 @@ class button:
             if self.getStyle("border"):
                 pygame.draw.rect(self.surfaces[s], allThemes[self.theme][0], (0, 0, self.width, self.height), self.getStyle("border-width"))
 
-    def update(self, drawSurface: pygame.Surface) -> None:
+    def draw(self, drawSurface: pygame.Surface) -> None:
 
         """
-        Draws the button on the given surface. Also updates the 'clicking' logic.
+        Draws the button on a given surface.
 
         :param drawSurface: Surface to draw button on.
+        """
+
+        drawSurface.blit(self.surfaces[self.state], self.pos)  # Draw surface based on current state
+
+    def update(self) -> None:
+
+        """
+        Updates the button's clicking logic.
         """
 
         self.isPressed = False # Reset value each time, so it is only true for one frame
@@ -184,4 +214,121 @@ class button:
         if self.state == "hover" and local_m_down: # If hovering over, and mouse just pressed down
             self.state = "clicked"
 
-        drawSurface.blit(self.surfaces[self.state], self.pos) # Draw surface based on current state
+    def updateDraw(self, drawSurface: pygame.Surface) -> None:
+
+        """
+        Updates and draws the button using a single function call.
+        This allows the update() and draw() functions to be used separately if needed, but can just process the entire thing using updateDraw().
+
+        :param drawSurface: Surface to draw button on.
+        """
+
+        self.update()
+        self.draw(drawSurface)
+
+class buttonList:
+
+    """
+    A class for a row of multiple buttons.
+    Can pass regular button style parameters into it, as well as some additional ones.
+    Can set toggle=True to create a selector, where at any point in time exactly one button in the list will be selected.
+    """
+
+    def __init__(self, texts: typing.List[str], theme: str, pos: typing.Tuple[int, int], style: dict = None, toggle = False, onChange: typing.Callable = None) -> None:
+
+        """
+        Creates buttonList class.
+
+        :param texts: List of button text values.
+        :param theme: Colour theme to use, key from allThemes dictionary.
+        :param pos: Coordinate of top-left corner of button.
+        :param style: A dictionary of customisable style parameters.
+        :param toggle: Set to true to create a selector, where one button in the list can be highlighted at once.
+        :param onChange: Function to call when in toggle mode and a different button is clicked.
+        """
+
+        self.texts: typing.List[str] = texts
+        self.theme: str = theme
+        self.pos: typing.Tuple[int, int] = pos
+
+        if not self.theme in allThemes:
+            warnings.warn(f"{self.theme} theme does not exist! Defaulting to basic theme.")
+            self.theme = "basic"
+
+        if style is None:
+            self.style: dict = {}
+        else:
+            self.style: dict = style
+
+        self.width: int = 0
+        self.height: int = 0
+
+        self.buttons: typing.List[button] = [] # List of all individual button objects
+        x = self.pos[0] # First button is at specified coordinate
+        for text in self.texts:
+
+            b = button(text, self.theme, (x, self.pos[1]), style=self.style) # Create button
+            x += b.width + self.getStyle("spacing") # Increment x by last button width so that new button doesn't overlap
+            self.buttons.append(b)
+
+        # Used in toggle mode
+        self.toggle = toggle
+        self.selected = 0 # Currently selected button from self.buttons list
+        self.onChange: typing.Callable = onChange
+
+    def getStyle(self, name: str) -> typing.Any:
+
+        """
+        Used to get information about the style of the object, or returns the default if it wasn't specified
+
+        :param name: Style parameter to look up
+        :return: Style used, if supplied, otherwise the default value
+        """
+
+        global buttonListDefaults
+
+        if name in self.style: # If user specified the style parameter
+            return self.style[name]
+
+        return buttonListDefaults[name] # If not specified, return the default from the above definition
+
+    def update(self, drawSurface: pygame.Surface) -> None:
+
+        """
+        Updates the selection logic, and draws all buttons.
+
+        :param drawSurface: Surface to draw buttons on.
+        """
+
+        for i, b in enumerate(self.buttons):
+            b.update()
+
+            if self.toggle:
+                if b.isPressed: # This button was clicked
+                    if self.selected != i: # Different to currently selected
+                        self.selected = i # Set this as selected
+                        if not self.onChange is None:
+                            self.onChange() # Run supplied function
+
+            else: # If not in toggle mode
+                b.draw(drawSurface) # Can draw button straight away, no addition logic needed
+
+        if self.toggle:
+            for i, b in enumerate(self.buttons):
+
+                    if self.selected == i: # Selected button always has "clicked" appearance, even if not actually clicked
+                        b.state = "clicked" # Force state to "clicked"
+                        b.draw(drawSurface) # Draw in this state
+                        b.state = "normal" # Revert state to "normal" for future updates
+
+                    else: # Not the selected option
+
+                        clicking = False
+                        if b.state == "clicked":
+                            b.state = "normal" # Force button to "normal" state for drawing purposes
+                            clicking = True # Need to remember if the user is pressing the mouse on the button
+
+                        b.draw(drawSurface) # Draw in the "normal" state
+
+                        if clicking:
+                            b.state = "clicked" # Revert back to "clicked" state for future updates if the user is clicking on the button

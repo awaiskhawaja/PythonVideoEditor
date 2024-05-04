@@ -37,7 +37,7 @@ def txt(size: int, text: str, color: typing.Tuple[int, int, int], tx: int, ty: i
     """
 
     font = pygame.font.SysFont('arial', size) # Get system font
-    label = font.render(text, 1, color) # Render text
+    label = font.render(text, True, color) # Render text
     screen.blit(label, (tx, ty)) # Draw on main surface
 
 def mtouch(tx: int, ty: int, tw: int, th: int) -> bool:
@@ -58,9 +58,9 @@ def mtouch(tx: int, ty: int, tw: int, th: int) -> bool:
     return t
 
 # ----- Setup -----
-b = gui.button("Test", "dark", (10, 10), style={"border":True, "border-width": 1}) # Example button
+b = gui.button("Test", "dark", (10, 10), style={"border": True, "border-width": 1}) # Example button
 b2 = gui.button("Test Button Longer Text", "basic", (10, 200), style={"border": True, "border-width": 10, "padding-width": 200, "padding-height": 200})
-
+bl = gui.buttonList(["test 1", "test 2", "test 3", "much longer text"], "dark", (10, 500), style={"border": True}, toggle=True)
 # ----- Main loop -----
 
 running = True
@@ -96,8 +96,9 @@ while running:
     # ----------
 
     gui.updateLocals(mx, my, mp, m_down) # Pass mouse data to gui library
-    b.update(screen) # Draw and update button
-    b2.update(screen)
+    b.updateDraw(screen) # Draw and update button
+    b2.updateDraw(screen)
+    bl.update(screen)
 
     pygame.display.flip()
 
